@@ -10,11 +10,11 @@ use MT;
 
 # version
 use vars qw($VERSION);
-$VERSION = '0.1.1';
+$VERSION = '0.1.2';
 
 my $about = {
   name => 'MT-AltEntries',
-  description => 'Alternate entries if category is empty.',
+  description => 'Load alternate entries from another category.',
   author_name => 'Everitz Consulting',
   author_link => 'http://www.everitz.com/',
   version => $VERSION,
@@ -30,9 +30,23 @@ sub AltEntries {
   # blog id
   my $blog_id = $ctx->stash('blog_id');
 
+  # limit results
+  my $lastn = $args->{lastn} || 0;
+
   # entry stuff
   require MT::Entry;
   my @entries;
+
+  # common parms
+  my %terms = (
+    'blog_id' => $blog_id,
+    'status' => MT::Entry::RELEASE
+  );
+  my %args = (
+    'direction' => 'descend',
+    'limit' => $lastn,
+    'sort' => 'created_on'
+  );
 
   # entries by category
   if (my $category = $args->{category}) {
@@ -42,48 +56,15 @@ sub AltEntries {
       'label' => $category
     });
     if ($cat) {
-      my %entries;
-      require MT::Placement;
-      my @placements = MT::Placement->load({
-        'blog_id' => $blog_id,
-        'category_id' => $cat->id
-      });
-      for my $place (@placements) {
-        $entries{$place->entry_id}++;
-      }
-      @entries = map { MT::Entry->load($_) } keys (%entries);
-      if (my $n = $args->{lastn}) {
-        @entries = sort { $b->created_on cmp $a->created_on } @entries;
-        my @work_entries;
-        for (my $x = 0; $x < $n; $x++) {
-          push @work_entries, $entries[$x];
-        }
-        @entries = @work_entries;
-      }
-      my $app = MT->instance;
-      $app->log('cat entries: '.scalar @entries);
+      $args{'join'} = [ 'MT::Placement', 'entry_id', { 'category_id' => $cat->id } ];
     }
+    @entries = MT::Entry->load(\%terms, \%args);
   }
 
   unless (scalar (@entries)) {
-    my (%args, %terms);
-    $args{'direction'} = 'descend';
-    $args{'sort'} = 'created_on';
-    if (my $n = $args->{lastn}) {
-      $args{'limit'} = $n;
-    }
-    $terms{'blog_id'} = $blog_id;
-    $terms{'status'} = MT::Entry::RELEASE();
+    undef $args{'join'};
     @entries = MT::Entry->load(\%terms, \%args);
-    my $app = MT->instance;
-    $app->log('all entries: '.$blog_id.' '.scalar @entries);
   }
-
-  # tbd: use the join method to pull entries?
-  @entries = MT::Entry->load(undef, {
-    'join' => [ 'MT::Placement', 'entry_id', { 'category_id' => 40, 'is_primary' => 1 } ],
-    'limit' => 3,
-  });
 
   my $builder = $ctx->stash('builder');
   my $tokens = $ctx->stash('tokens');
