@@ -10,7 +10,7 @@ use MT;
 
 # version
 use vars qw($VERSION);
-$VERSION = '0.1.0';
+$VERSION = '0.1.1';
 
 my $about = {
   name => 'MT-AltEntries',
@@ -78,6 +78,12 @@ sub AltEntries {
     my $app = MT->instance;
     $app->log('all entries: '.$blog_id.' '.scalar @entries);
   }
+
+  # tbd: use the join method to pull entries?
+  @entries = MT::Entry->load(undef, {
+    'join' => [ 'MT::Placement', 'entry_id', { 'category_id' => 40, 'is_primary' => 1 } ],
+    'limit' => 3,
+  });
 
   my $builder = $ctx->stash('builder');
   my $tokens = $ctx->stash('tokens');
