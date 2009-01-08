@@ -10,13 +10,13 @@ use MT;
 
 # version
 use vars qw($VERSION);
-$VERSION = '0.1.2';
+$VERSION = '0.1.3';
 
 my $about = {
   name => 'MT-AltEntries',
   description => 'Load alternate entries from another category.',
   author_name => 'Everitz Consulting',
-  author_link => 'http://www.everitz.com/',
+  author_link => 'http://everitz.com/',
   version => $VERSION,
 };
 MT->add_plugin(new MT::Plugin($about));
@@ -45,7 +45,7 @@ sub AltEntries {
   my %args = (
     'direction' => 'descend',
     'limit' => $lastn,
-    'sort' => 'created_on'
+    'sort' => 'authored_on'
   );
 
   # entries by category
