@@ -1,5 +1,5 @@
 # ===========================================================================
-# Copyright 2005, Everitz Consulting (mt@everitz.com)
+# Copyright Everitz Consulting.  Not for redistribution.
 # ===========================================================================
 package MT::Plugin::AltEntries;
 
